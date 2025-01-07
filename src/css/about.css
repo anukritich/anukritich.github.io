@@ -1,0 +1,71 @@
+/* General Reset */
+body {
+    margin: 0;
+    overflow: hidden; 
+    background: black; 
+    font-family: Arial, sans-serif; /* Set a clean, sans-serif font */
+  }
+  .section {
+    box-shadow: none;
+    text-align: left;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 100%;
+    color: black;
+    overflow: hidden; 
+    font-size: 24px; 
+    font-weight: bold;
+  }
+  
+  
+  /* Button Container */
+.button-container {
+    margin-left: 15px; /* Add space between links and button */
+  }
+  
+  button {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  button img {
+    width: 40px;
+    height: 40px;
+    transition: transform 0.3s ease; /* Smooth button scaling */
+  }
+  
+  button:hover img {
+    transform: scale(1.1); /* Slight zoom on hover */
+  }
+  
+  /* Button Container */
+  .button-container {
+    margin-left: 15px; /* Add space between links and button */
+  }
+  
+  
+  
+  
+  /* Content Section */
+  .content {
+    position: absolute;
+    top: 80px; /* Leave space for the navbar */
+    left: 20px;
+    color: white;
+    font-size: 20px;
+    z-index: 1;
+  }
+  
+  /* Canvas Styling */
+  canvas {
+    display: block; /* Full-screen canvas without scrollbars */
+  }
+  
+  /* Responsive Design */
+  @media screen and (max-width: 768px) {
+    
+  }
+  
+  
