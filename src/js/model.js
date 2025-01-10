@@ -1,7 +1,4 @@
-//import * as THREE from 'three';
-//import * as THREE from './js/three.module.js';
-//import * as THREE from "../node_modules/three/build/three.module.js";
-import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
@@ -10,7 +7,6 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
-import { CatmullRom } from 'three/src/extras/core/Interpolations.js';
 
 let scene, camera, renderer, raycaster, mouse,  mixer, cmixer ;
 let groundPlane, progressBar, progress = 0;
