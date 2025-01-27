@@ -58,8 +58,8 @@ export function contact() {
     loader.load('/assets/models/dogidle.glb', function (gltf) {
         dModel = gltf.scene; // 
         dModel.scale.set(0.21, 0.21, 0.21);
-        dModel.position.set(10, 0.5, 0); 
-        dModel.rotation.y = -(Math.PI / 3); // Rotate 60 degrees to the right
+        dModel.position.set(-13, 0.0, 0); 
+        dModel.rotation.y = (Math.PI / 2.25); // Rotate 60 degrees to the right
         scene.add(dModel);
 
         // Setup animation
@@ -78,7 +78,7 @@ export function contact() {
     const barContainer = document.createElement('div');
     barContainer.style.position = 'absolute';
     barContainer.style.top = '73%';  
-    barContainer.style.right = '25%';
+    barContainer.style.left = '20%';
     barContainer.style.width = '200px';
     barContainer.style.height = '20px';
     barContainer.style.backgroundColor = '#ddd';
@@ -93,10 +93,10 @@ export function contact() {
     barContainer.appendChild(progressBar);
 
     instructionText = document.createElement('div');
-    instructionText.innerText = 'Pet the dog to unlock the contact!';
+    instructionText.innerText = 'Click Me!';
     instructionText.style.position = 'absolute';
     instructionText.style.top = '78%'; 
-    instructionText.style.right = '25%';
+    instructionText.style.left = '25%';
     instructionText.style.fontSize = '14px';
     instructionText.style.color = '#333';
     document.body.appendChild(instructionText);
@@ -140,11 +140,12 @@ export function contact() {
 
             // Update the progress bar's width
             progressBar.style.width = progress + '%';
-            instructionText.innerText = 'Pet the dog to unlock the contact!';
+            instructionText.innerText = 'Click Me!';
 
             // Notify 
             if (progress === 100) {    
-                instructionText.innerText = 'Unlocked! Well Done!';
+                instructionText.innerText = 'Contact Unlocked!';
+                instructionText.style.left = '23%';
                 const event = new CustomEvent('barFull', { detail: { isBarFull: true } });
                 window.dispatchEvent(event); // Trigger event when the progress bar is full
 
@@ -170,8 +171,8 @@ export function contact() {
         loader.load('/assets/models/dogjump.glb', function (gltf) {
             const model = gltf.scene;
             model.scale.set(0.21, 0.21, 0.21);
-            model.position.set(10, 0.5, 0); 
-            model.rotation.y = -(Math.PI / 3); // Rotate 60 degrees to the right
+            model.position.set(-13, 0.0, 0); 
+            model.rotation.y = (Math.PI / 2.25); // Rotate 60 degrees to the right
             scene.add(model);
 
             // Setup animation
