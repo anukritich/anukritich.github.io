@@ -1,115 +1,166 @@
+/* font import*/
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Poppins:wght@400;500;600;700&display=swap');
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", serif;
+}
 /* General Reset */
 body {
   margin: 0;
-  overflow: hidden; /* Prevent scrollbars */
-  background: black; /* Static black background */
-  font-family: Arial, sans-serif; /* Set a clean, sans-serif font */
-}
-/* Add this to your style.css */
-.tooltip {
-  position: relative;
-  display: inline-block;
-}
-
-.tooltip .tooltip-text {
-  visibility: hidden;
-  width: 220px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  text-align: center;
-  border-radius: 5px;
-  padding: 5px;
-  position: absolute;
-  z-index: 1;
-  bottom: 100%;
-  left: 50%;
-  margin-left: -110px;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.tooltip:hover .tooltip-text {
-  visibility: visible;
-  opacity: 1;
-}
-
-.section{
-  box-shadow: none;
-  text-align: left;
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  width: 100%;
-  color: black;
   overflow: hidden; 
-  font-size: 24px; 
-  font-weight: bold
+  min-height: 200vh;
+  background: whitesmoke; 
 }
-
-.navbar {
+.sidebar{
+  width: 270px;
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%; /* Ensure the navbar spans the full width of the screen */
+  margin:16px;
+  border-radius: 16px;
+  height: calc(100vh - 16px);
+  background-color: black;
+  transition: 0.4s ease;
+}
+.sidebar.collapsed{
+  width: 85px;
+}
+.sidebar-header{
+  position: relative;
   display: flex;
-  justify-content: space-between; /* Align name on the left, links on the right */
-  align-items: center; /* Vertically center items */
-  padding: 10px 20px; /* Adjust padding for proper spacing */
-  box-sizing: border-box; /* Include padding in width calculations */
-  color: black; 
-  z-index: 10;
-  box-shadow: none; /* Subtle shadow for separation */
-  overflow: hidden; /* Prevent overflow */
+  padding:25px 20px;
+  align-items: center;
+  justify-content: space-between;
 }
-
-.navbar .left {
-  font-size: 20px; /* Larger font for your name */
-  font-weight: bold;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+.sidebar-header .header-logo img{
+  width: 46px;
+  height: 46px;
+  display: block;
+  object-fit: contain;
+  border-radius: 10%;
 }
-
-.navbar .right {
-  font-size: 20px;
-  display: flex;
-  align-items: center; /* Align items vertically */
-  font-weight: bolder;
-}
-
-.navbar a {
-  color: black;
-  text-decoration: none;
-  padding: 10px 15px;
-  font-size: 18px;
-  margin: 0 5px;
-  transition: background-color 0.3s ease, color 0.3s ease; /* Smooth hover effects */
-}
-
-.navbar a:hover {
-  background-color: black; /* Dark gray background on hover */
-  color: white;
-  border-radius: 5px; /* Rounded hover effect */
-}
-/* Button Container */
-.button-container {
-  margin-left: 15px; /* Add space between links and button */
-}
-
-button {
-  background: none;
+.sidebar-header .toggler{
+  position:absolute;
+  right: 20px;
+  height: 35px;
+  width: 35px;
   border: none;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color:whitesmoke;
+  background: black;
+  transition: 0.4s ease;
 }
-
-button img {
-  width: 40px;
-  height: 40px;
-  transition: transform 0.3s ease; /* Smooth button scaling */
+.sidebar.collapsed .sidebar-header .toggler{
+  transform: translate(-4px,65px);
 }
-
-button:hover img {
-  transform: scale(1.1); /* Slight zoom on hover */
+.sidebar-header .toggler:hover{
+  background: whitesmoke;
+  color: black;
 }
+.sidebar-header .toggler span{
+  font-size: 1.75rem;
+  transition: 0.4s ease;
+}
+.sidebar.collapsed .sidebar-header .toggler span{
+  transform: rotate(180deg);
+}
+.sidebar-nav .nav-list{
+  list-style: none;
+  display: flex;
+  gap:4px;
+  padding:0 15px;
+  flex-direction: column;
+  transform: translateY(15px);
+  transition: 0.4s ease;
+}
+.sidebar.collapsed .sidebar-nav{
+  transform: translateY(35px);
+}
+.sidebar-nav .nav-link{
+  color: whitesmoke;
+  display: flex;
+  gap:12px;
+  border-radius: 8px;
+  padding: 12px 15px;
+  text-decoration: none;
+  transition: 0.4s ease;
+}
+.sidebar-nav .nav-link:hover{
+  background: whitesmoke;
+  color: black;
+}
+.sidebar-nav .nav-link .nav-label{
+  transition: opacity 0.4s ease;
+}
+.sidebar.collapsed .sidebar-nav .nav-link .nav-label{
+  opacity: 0;
+  pointer-events: none;
+}
+.sidebar-nav .nav-link .nav-icon{
+  width: 20px;
+  height: 20px;
+}
+.sidebar-nav .nav-item{
+  position:relative;
+}
+.sidebar-nav .nav-tooltip{
+  position:absolute;
+  top:-10px;
+  opacity: 0;
+  display: none;
+  pointer-events: none;
+  left:calc(100% + 25px);
+  background:black;
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: whitesmoke;
+  white-space: nowrap;
+  box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+  transition: 0.4s;
+}
+.sidebar.collapsed .sidebar-nav .nav-tooltip{
+  display: block;
+}
+.sidebar-nav .nav-item:hover .nav-tooltip{
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(50%);
+  transition: 0.4s ease;
 
+}
+@media (max-width :1024px){
+  .sidebar{
+    margin: 13px;
+    width:calc(100% - 28px) ;
+  }
+  .sidebar-header{
+    position: sticky;
+    top:0;
+    z-index: 20;
+    background: black;
+    padding: 8px 10px;
+    border-radius: 16px;
+  }
+  .sidebar-header .header-logo img{
+    width: 40px;
+    height: 40px;
+  }
+  .sidebar-nav  .nav-list{
+   padding: 0 10px; 
+  }
+  .sidebar-nav .nav-link{
+    gap:10px;
+    padding: 10px;
+    font-size: 0.94rem;
+  }
+  .sidebar-nav .nav-link .nav-icon{
+    font-size:1.37rem;
+  }
+}
 /* Content Section */
 .content {
   position: absolute;

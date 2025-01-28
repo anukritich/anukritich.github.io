@@ -1,4 +1,5 @@
-import { init } from './js/mode-toggle.js';
-import {home} from './js/about.js'
-home();
-init();
+const sidebar=document.querySelector(".sidebar");
+const sidebarToggler =document.querySelector(".sidebar-toggler");
+sidebarToggler.addEventListener("click",()=>{
+    sidebar.classList.toggle("collapsed");
+});
