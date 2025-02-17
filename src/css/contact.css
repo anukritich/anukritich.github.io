@@ -6,47 +6,47 @@ body {
   background: black; 
   font-family: Arial, sans-serif;
 }
+h1 {
+  font-size: 24px;
+  font-weight: 700;
+}
+header {
+  position: absolute;
+  top: 5px;
+  left: 20px;
+}
 
+
+/* Navbar */
 .navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  display: flex;
-  justify-content: left;
-  align-items: center; 
-  padding: 10px 20px; 
-  box-sizing: border-box; 
-  color: black; 
-  z-index: 10;
-  box-shadow: none; 
-  overflow: hidden; 
-}
-.nav-icon {
-  width: 30px; 
-  height: 30px;
-  margin: 0 10px; 
-  vertical-align: middle; 
-}
-.nav-icon:hover{
-  transform: scale(1.2);
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 15px;
+    border-radius: 10px;
+    backdrop-filter: blur(5px);
 }
 
 .navbar a {
-  color: black;
-  text-decoration: none;
-  padding: 10px 15px;
-  font-size: 18px;
-  margin: 0 5px;
-  transition: background-color 0.3s ease, color 0.3s ease; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
+.navbar img {
+  width: 24px;
+  height: 24px;
+    transition: transform 0.2s ease-in-out;
+}
 
+.navbar img:hover {
+    transform: scale(1.1);
+}
 
 /* Content Section */
 .content {
   position: absolute;
-  top: 12%; 
+  top: 21%; 
   left: 45%;
   color: white;
   font-size: 20px;

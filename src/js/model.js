@@ -58,7 +58,7 @@ export function contact() {
     loader.load('/assets/models/dogidle.glb', function (gltf) {
         dModel = gltf.scene; // 
         dModel.scale.set(0.21, 0.21, 0.21);
-        dModel.position.set(-13, 0.0, 0); 
+        dModel.position.set(-13, -1.0, 0); 
         dModel.rotation.y = (Math.PI / 2.25); // Rotate 60 degrees to the right
         scene.add(dModel);
 
@@ -77,7 +77,7 @@ export function contact() {
     // Create a progress bar below the dog
     const barContainer = document.createElement('div');
     barContainer.style.position = 'absolute';
-    barContainer.style.top = '73%';  
+    barContainer.style.top = '78%';  
     barContainer.style.left = '20%';
     barContainer.style.width = '200px';
     barContainer.style.height = '20px';
