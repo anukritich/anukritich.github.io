@@ -120,4 +120,63 @@ header {
 
 .grid-item img:hover {
     transform: scale(1.05);
+    color: black;
+    opacity: 70%;
+}
+.grid-item {
+  position: relative;
+  display: inline-block;
+}
+
+.text-overlayLight {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color:black;
+  opacity: 0;
+  visibility: hidden;
+  text-align: center;
+  padding: 10px;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+.text-overlayDark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color:white;
+  opacity: 0;
+  visibility: hidden;
+  text-align: center;
+  padding: 10px;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+.grid-item:hover .text-overlayLight {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0.2s; /* Make text appear immediately */
+}
+.grid-item:hover .text-overlayDark {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0.2s; /* Make text appear immediately */
+}
+.text-overlayLight h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+}
+.text-overlayDark  h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+}
+.text-overlayLigth p {
+  font-size: 16px;
+  margin-top: 10px;
+}
+.text-overlayDark p {
+  font-size: 16px;
+  margin-top: 10px;
 }
