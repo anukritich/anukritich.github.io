@@ -11,7 +11,7 @@ body {
   margin: 0;
   overflow: hidden; 
   min-height: 200vh;
-  background: whitesmoke; 
+  background:black; 
 }
 .sidebar{
   width: 270px;
@@ -19,7 +19,7 @@ body {
   margin:16px;
   border-radius: 16px;
   height: calc(100vh - 16px);
-  background-color: black;
+  background-color:black;
   transition: 0.4s ease;
 }
 .sidebar.collapsed{
@@ -50,16 +50,16 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  color:whitesmoke;
-  background: black;
+  color:black;
+  background:white;
   transition: 0.4s ease;
 }
 .sidebar.collapsed .sidebar-header .toggler{
   transform: translate(-4px,65px);
 }
 .sidebar-header .toggler:hover{
-  background: whitesmoke;
-  color: black;
+  background:black;
+  color: white;
 }
 .sidebar-header .toggler span{
   font-size: 1.75rem;
@@ -81,7 +81,7 @@ body {
   transform: translateY(35px);
 }
 .sidebar-nav .nav-link{
-  color: whitesmoke;
+  color: white;
   display: flex;
   gap:12px;
   border-radius: 8px;
@@ -90,7 +90,7 @@ body {
   transition: 0.4s ease;
 }
 .sidebar-nav .nav-link:hover{
-  background: whitesmoke;
+  background: white;
   color: black;
 }
 .sidebar-nav .nav-link .nav-label{
@@ -114,10 +114,10 @@ body {
   display: none;
   pointer-events: none;
   left:calc(100% + 25px);
-  background:black;
+  background:white;
   padding: 6px 12px;
   border-radius: 8px;
-  color: whitesmoke;
+  color: black;
   white-space: nowrap;
   box-shadow: 0 5px 10px rgba(0,0,0,0.1);
   transition: 0.4s;
@@ -141,7 +141,7 @@ body {
     position: sticky;
     top:0;
     z-index: 20;
-    background: black;
+    background: white;
     padding: 8px 10px;
     border-radius: 16px;
   }
@@ -175,4 +175,3 @@ body {
 canvas {
   display: block; /* Full-screen canvas without scrollbars */
 }
-
