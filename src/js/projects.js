@@ -1,96 +1,245 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// Scene setup
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+class GalaxyVisualization {
+    constructor() {
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.stars = null;
+        this.numStars = 10000;
+        this.galaxyRadius = 800;
+        this.spiralDensity = 0.5;
+        this.assetsLoaded = 0;
+        this.totalAssets = 0;
 
-// Galaxy parameters
-const numStars = 10000; // Number of stars in the galaxy
-const galaxyRadius = 800; // The radius of the galaxy
-const spiralDensity = 0.5; // Density of stars in the spiral arm
+        this.assetsToPreload = {
+            textures: [
+                '/assets/textures/star.png',
+                '/assets/textures/galaxy_bg.jpg'
+            ],
+            models: [
+                '/assets/models/spacecraft.glb'
+            ],
+            audio: [
+                '/assets/audio/space_ambient.mp3'
+            ]
+        };
 
-// Geometry and material for stars
-const geometry = new THREE.BufferGeometry();
-const positions = new Float32Array(numStars * 3);
-const colors = new Float32Array(numStars * 3); // Array to store color data
-const sizes = new Float32Array(numStars); // Array to store size data for stars
+        this.totalAssets = this.assetsToPreload.textures.length + 
+                           this.assetsToPreload.models.length + 
+                           this.assetsToPreload.audio.length;
 
-// Function to generate a very light sapphire blue or white color
-function randomColor() {
-    // Randomly choose white or a very light sapphire blue color
-    if (Math.random() > 0.5) {
-        // Return white
-        return new THREE.Color(1, 1, 1);
-    } else {
-        // Return a very light sapphire blue color (RGB: r=0, g=0, b=0.7)
-        return new THREE.Color(0, 0, 0.7); // Adjust blue to create light sapphire blue
+        this.loadedAssets = {
+            textures: {},
+            models: {},
+            audio: {}
+        };
+
+        this.setupLoadingScreen();
+        this.preloadAssets();
+    }
+
+    setupLoadingScreen() {
+        this.loadingScreen = document.getElementById('loading-screen');
+        this.loadingText = document.getElementById('loading-text');
+        this.loadingSpinner = document.getElementById('spinner');
+
+        if (!this.loadingScreen || !this.loadingText || !this.loadingSpinner) {
+            console.warn("Warning: Loading screen elements not found in DOM.");
+            return;
+        }
+
+        this.loadingText.textContent = 'Loading 0%';
+        this.loadingSpinner.style.display = 'block';
+    }
+
+    updateLoadingProgress() {
+        this.assetsLoaded++;
+        const progress = Math.round((this.assetsLoaded / this.totalAssets) * 100);
+        
+        if (this.loadingText) {
+            this.loadingText.textContent = `Loading ${progress}%`;
+        }
+
+        if (this.assetsLoaded >= this.totalAssets) {
+            this.init();
+            this.animate();
+
+            setTimeout(() => {
+                if (this.loadingScreen) this.loadingScreen.style.display = 'none';
+                if (this.loadingSpinner) this.loadingSpinner.style.display = 'none';
+            }, 300);
+        }
+    }
+
+    preloadAssets() {
+        if (this.totalAssets === 0) {
+            this.simulateLoading();
+            return;
+        }
+
+        const loadingManager = new THREE.LoadingManager(() => {
+            console.log("All assets loaded");
+            this.updateLoadingProgress();
+        });
+
+        // Preload textures
+        const textureLoader = new THREE.TextureLoader(loadingManager);
+        this.assetsToPreload.textures.forEach(texturePath => {
+            textureLoader.load(texturePath,
+                (texture) => {
+                    this.loadedAssets.textures[texturePath] = texture;
+                    this.updateLoadingProgress();
+                },
+                undefined,
+                (error) => {
+                    console.error(`Error loading texture ${texturePath}:`, error);
+                    this.updateLoadingProgress();
+                }
+            );
+        });
+
+        // Preload models
+        const modelLoader = new GLTFLoader(loadingManager);
+        this.assetsToPreload.models.forEach(modelPath => {
+            modelLoader.load(modelPath,
+                (gltf) => {
+                    this.loadedAssets.models[modelPath] = gltf;
+                    this.updateLoadingProgress();
+                },
+                undefined,
+                (error) => {
+                    console.error(`Error loading model ${modelPath}:`, error);
+                    this.updateLoadingProgress();
+                }
+            );
+        });
+
+        // Preload audio
+        this.assetsToPreload.audio.forEach(audioPath => {
+            const audio = new Audio();
+            audio.addEventListener('canplaythrough', () => {
+                this.loadedAssets.audio[audioPath] = audio;
+                this.updateLoadingProgress();
+            }, { once: true });
+
+            audio.addEventListener('error', () => {
+                console.error(`Error loading audio ${audioPath}`);
+                this.updateLoadingProgress();
+            }, { once: true });
+
+            audio.src = audioPath;
+            audio.load();
+        });
+    }
+
+    simulateLoading() {
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 5;
+            if (this.loadingText) this.loadingText.textContent = `Loading ${progress}%`;
+
+            if (progress >= 100) {
+                clearInterval(interval);
+                this.init();
+                this.animate();
+
+                setTimeout(() => {
+                    if (this.loadingScreen) this.loadingScreen.style.display = 'none';
+                }, 300);
+            }
+        }, 150);
+    }
+
+    init() {
+        this.setupScene();
+        this.createGalaxy();
+    }
+
+    setupScene() {
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x000000);
+
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(this.renderer.domElement);
+
+        this.camera.position.z = 1000;
+
+        window.addEventListener('resize', () => {
+            this.camera.aspect = window.innerWidth / window.innerHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Add preloaded model
+        if (this.loadedAssets.models['/assets/models/spacecraft.glb']) {
+            const model = this.loadedAssets.models['/assets/models/spacecraft.glb'].scene;
+            model.scale.set(0.1, 0.1, 0.1);
+            model.position.set(0, 0, 800);
+            this.scene.add(model);
+        }
+
+        // Start background audio
+        if (this.loadedAssets.audio['/assets/audio/space_ambient.mp3']) {
+            const ambientSound = this.loadedAssets.audio['/assets/audio/space_ambient.mp3'];
+            ambientSound.loop = true;
+            ambientSound.volume = 0.5;
+            document.addEventListener('click', () => {
+                ambientSound.play().catch(err => console.error('Audio play error:', err));
+            }, { once: true });
+        }
+    }
+
+    randomColor() {
+        return Math.random() > 0.5 
+            ? new THREE.Color(1, 1, 1)
+            : new THREE.Color(0, 0, 0.7);
+    }
+
+    createGalaxy() {
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(this.numStars * 3);
+        const colors = new Float32Array(this.numStars * 3);
+
+        for (let i = 0; i < this.numStars; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.random() * this.galaxyRadius;
+            const z = (Math.random() - 0.5) * 2 * this.galaxyRadius;
+
+            positions.set([radius * Math.cos(angle), radius * Math.sin(angle), z], i * 3);
+
+            const color = this.randomColor();
+            colors.set([color.r, color.g, color.b], i * 3);
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const material = new THREE.PointsMaterial({
+            vertexColors: true,
+            size: 2,
+            transparent: true
+        });
+
+        this.stars = new THREE.Points(geometry, material);
+        this.scene.add(this.stars);
+    }
+
+    animate() {
+        requestAnimationFrame(() => this.animate());
+
+        if (this.stars) {
+            this.stars.rotation.y += 0.0005;
+        }
+
+        this.renderer.render(this.scene, this.camera);
     }
 }
 
-// Function to calculate size based on distance from center
-function getStarSize(radius) {
-    // Make stars bigger toward the center (smaller in outer space)
-    return 1 + (1 - radius / galaxyRadius) * 3; // Larger stars near center, smaller at edges
-}
-
-// Create stars with more randomness in position and color
-for (let i = 0; i < numStars; i++) {
-    const angle = Math.random() * Math.PI * 2; // Random angle for the star
-    
-    // Uniform random distribution for the radius (no heavy concentration near center)
-    const radius = Math.random() * galaxyRadius; // Uniformly distribute stars within the galaxy's radius
-    const z = (Math.random() - 0.5) * 2 * galaxyRadius; // Random height (z-axis)
-
-    // Use randomness to make the spiral more scattered
-    const x = radius * Math.cos(angle + Math.random() * spiralDensity);
-    const y = radius * Math.sin(angle + Math.random() * spiralDensity);
-
-    positions[i * 3] = x;
-    positions[i * 3 + 1] = y;
-    positions[i * 3 + 2] = z;
-
-    // Assign random color to each star (white or very light sapphire blue)
-    const color = randomColor();
-    colors[i * 3] = color.r;
-    colors[i * 3 + 1] = color.g;
-    colors[i * 3 + 2] = color.b;
-
-    // Calculate star size based on its radius from the center
-    sizes[i] = getStarSize(radius);
-}
-
-geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-// Material for the stars (using vertex colors for custom star colors)
-const material = new THREE.PointsMaterial({
-    vertexColors: true, // Enable vertex colors for each star
-    sizeAttenuation: true, // Allows size to adjust based on the distance from the camera
-    transparent: true,
-    opacity: 0.8
-});
-
-// Create points (stars) in the galaxy
-const stars = new THREE.Points(geometry, material);
-scene.add(stars);
-
-// Camera positioning
-camera.position.z = 1000;
-
-// Animation loop
-function animate() {
-    requestAnimationFrame(animate);
-
-    // Rotate the galaxy for better visual effect
-    stars.rotation.x += 0.0001;
-    stars.rotation.y += 0.0001;
-
-    // Render the scene
-    renderer.render(scene, camera);
-}
-
-animate();
+window.onload = () => {
+    new GalaxyVisualization();
+};
