@@ -1,4 +1,4 @@
-import"./modulepreload-polyfill-B5Qt9EMX.js";import{O,M as L,B as C,F as p,S as l,U as x,V as d,W as m,H as v,N as z,C as M,a as E,T as A,L as W,b,G as D,R as P,c as B,P as N,d as H,A as X,e as j,f as R,g as F,h as w,i as U}from"./GLTFLoader-DOQuxnj2.js";const G={name:"CopyShader",uniforms:{tDiffuse:{value:null},opacity:{value:1}},vertexShader:`
+import{O,M as L,B as C,F as p,S as l,U as x,V as d,W as m,H as v,N as z,C as M,a as E,T as A,L as W,b,R as P,c as B,P as N,d as H,A as X,e as j,f as R,g as F,h as w,i as U}from"./three.module-0M9Kr0LL.js";import{G as D}from"./GLTFLoader-CpjVlp7s.js";const G={name:"CopyShader",uniforms:{tDiffuse:{value:null},opacity:{value:1}},vertexShader:`
 
 		varying vec2 vUv;
 

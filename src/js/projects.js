@@ -243,3 +243,32 @@ class GalaxyVisualization {
 window.onload = () => {
     new GalaxyVisualization();
 };
+
+// Cursor elements
+const cursorDot = document.querySelector(".cursor-dot");
+const cursorOutline = document.querySelector(".cursor-outline");
+
+if (cursorDot && cursorOutline) {
+    let dotX = 0, dotY = 0; // Position of the inner dot
+    let outlineX = 0, outlineY = 0; // Position of the outer outline
+    const speed = 0.1; // Adjust for smoother lag effect
+
+    document.addEventListener("mousemove", (e) => {
+        dotX = e.clientX;
+        dotY = e.clientY;
+
+        // Instantly move the small cursor dot
+        cursorDot.style.transform = `translate(${dotX}px, ${dotY}px)`;
+    });
+
+    function animateCursor() {
+        outlineX += (dotX - outlineX) * speed;
+        outlineY += (dotY - outlineY) * speed;
+
+        cursorOutline.style.transform = `translate(${outlineX}px, ${outlineY}px)`;
+
+        requestAnimationFrame(animateCursor);
+    }
+
+    animateCursor(); // Start animation loop
+}

@@ -12,6 +12,37 @@ body {
   color: white;
   padding: 40px;
   overflow: scroll; /* Allows scrolling */
+  cursor: none;
+}
+/* Galactic Cursor */
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #87cefa 10%, #00bfff 90%);
+  box-shadow: 0 0 8px rgba(135, 206, 250, 0.7),
+              0 0 15px rgba(0, 191, 255, 0.6);
+  position: fixed;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.cursor-outline {
+  width: 30px;
+  height: 30px;
+    border: 2px solid rgba(135, 206, 250, 0.5);
+    box-shadow: 0 0 10px rgba(135, 206, 250, 0.6),
+                0 0 20px rgba(0, 191, 255, 0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 999;
+  pointer-events: none;
 }
 #loading-screen {
   position: fixed;
