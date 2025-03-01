@@ -1,32 +1,55 @@
 /* font import*/
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Poppins:wght@400;500;600;700&display=swap');
-*{
+
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Poppins", serif;
+  font-family: "Poppins", sans-serif;
 }
+
 /* General Reset */
 body {
   margin: 0;
-  overflow: hidden; 
-  min-height: 200vh;
-  background:black; 
+  overflow-x: hidden;
+  background: black;
+  /* Hide scrollbar for different browsers */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+body::-webkit-scrollbar {
+  display: none;
+}
+
+html {
+  scroll-behavior: smooth; /* Smooth scrolling */
+  height: 100%;
+  /* Hide scrollbar for different browsers */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+html::-webkit-scrollbar {
+  display: none;
+}
+
+/* Loading Screen */
 #loading-screen {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background:  black;
+  background: black;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   color: white;
-  font-family: Arial, sans-serif;
-  z-index: 1000;
+  z-index: 2000;
   transition: opacity 0.5s ease-out;
 }
 
@@ -52,165 +75,240 @@ body {
   pointer-events: none;
 }
 
-.sidebar{
-  width: 270px;
+/* Navbar */
+.sidebar {
+  width: 100%;
+  height: 60px; /* Navbar height */
   position: fixed;
-  margin:16px;
-  border-radius: 16px;
-  height: calc(100vh - 16px);
-  background-color:black;
-  transition: 0.4s ease;
-}
-.sidebar.collapsed{
-  width: 85px;
-}
-.sidebar-header{
-  position: relative;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.8);
   display: flex;
-  padding:25px 20px;
   align-items: center;
   justify-content: space-between;
+  padding: 0 20px;
+  transition: 0.4s ease;
+  z-index: 1000;
 }
-.sidebar-header .header-logo img{
-  width: 46px;
-  height: 46px;
-  display: block;
-  object-fit: contain;
-  border-radius: 10%;
-}
-.sidebar-header .toggler{
-  position:absolute;
-  right: 20px;
-  height: 35px;
-  width: 35px;
-  border: none;
-  cursor: pointer;
+
+/* Navbar Header */
+.sidebar-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  color:black;
-  background:white;
-  transition: 0.4s ease;
+  gap: 15px;
 }
-.sidebar.collapsed .sidebar-header .toggler{
-  transform: translate(-4px,65px);
+
+/* Logo Styling */
+.sidebar-header .header-logo img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  border-radius: 10%;
+  filter: invert(100%);
 }
-.sidebar-header .toggler:hover{
-  background:black;
-  color: white;
-}
-.sidebar-header .toggler span{
-  font-size: 1.75rem;
-  transition: 0.4s ease;
-}
-.sidebar.collapsed .sidebar-header .toggler span{
-  transform: rotate(180deg);
-}
-.sidebar-nav .nav-list{
+
+/* Navigation List */
+.sidebar-nav .nav-list {
   list-style: none;
   display: flex;
-  gap:4px;
-  padding:0 15px;
-  flex-direction: column;
-  transform: translateY(15px);
-  transition: 0.4s ease;
+  gap: 20px;
+  padding: 0;
+  margin: 0;
 }
-.sidebar.collapsed .sidebar-nav{
-  transform: translateY(35px);
-}
-.sidebar-nav .nav-link{
+
+/* Navigation Links */
+.sidebar-nav .nav-link {
   color: white;
   display: flex;
-  gap:12px;
+  align-items: center;
+  gap: 8px;
   border-radius: 8px;
-  padding: 12px 15px;
+  padding: 10px 15px;
   text-decoration: none;
   transition: 0.4s ease;
+  font-size: 1rem;
+  position: relative;
 }
-.sidebar-nav .nav-link:hover{
+
+/* Navigation Link Hover Effect */
+.sidebar-nav .nav-link:hover {
   background: white;
   color: black;
 }
-.sidebar-nav .nav-link .nav-label{
-  transition: opacity 0.4s ease;
-}
-.sidebar.collapsed .sidebar-nav .nav-link .nav-label{
-  opacity: 0;
-  pointer-events: none;
-}
-.sidebar-nav .nav-link .nav-icon{
+
+/* Navigation Icons */
+.sidebar-nav .nav-link .nav-icon {
   width: 20px;
   height: 20px;
 }
-.sidebar-nav .nav-item{
-  position:relative;
+
+/* Tooltip Styling */
+.sidebar-nav .nav-item {
+  position: relative;
 }
-.sidebar-nav .nav-tooltip{
-  position:absolute;
-  top:-10px;
-  opacity: 0;
-  display: none;
-  pointer-events: none;
-  left:calc(100% + 25px);
-  background:white;
+
+.sidebar-nav .nav-tooltip {
+  position: absolute;
+  bottom: -45px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  color: black;
   padding: 6px 12px;
   border-radius: 8px;
-  color: black;
   white-space: nowrap;
-  box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-  transition: 0.4s;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  font-size: 0.9rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.3s ease;
 }
-.sidebar.collapsed .sidebar-nav .nav-tooltip{
-  display: block;
-}
-.sidebar-nav .nav-item:hover .nav-tooltip{
+
+/* Show Tooltip on Hover */
+.sidebar-nav .nav-item:hover .nav-tooltip {
   opacity: 1;
-  pointer-events: auto;
-  transform: translateY(50%);
-  transition: 0.4s ease;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-5px);
+}
 
+/* Story Container */
+#story-container {
+  width: 100%;
+  /* Hide scrollbar */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
-@media (max-width :1024px){
-  .sidebar{
-    margin: 13px;
-    width:calc(100% - 28px) ;
-  }
-  .sidebar-header{
-    position: sticky;
-    top:0;
-    z-index: 20;
-    background: white;
-    padding: 8px 10px;
-    border-radius: 16px;
-  }
-  .sidebar-header .header-logo img{
-    width: 40px;
-    height: 40px;
-  }
-  .sidebar-nav  .nav-list{
-   padding: 0 10px; 
-  }
-  .sidebar-nav .nav-link{
-    gap:10px;
-    padding: 10px;
-    font-size: 0.94rem;
-  }
-  .sidebar-nav .nav-link .nav-icon{
-    font-size:1.37rem;
-  }
+
+#story-container::-webkit-scrollbar {
+  display: none;
 }
-/* Content Section */
-.content {
-  position: absolute;
-  top: 80px; /* Leave space for the navbar */
-  left: 20px;
+
+/* Story Sections */
+.story-section {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Welcome Text Styling */
+#welcome-text {
   color: white;
-  font-size: 20px;
-  z-index: 1;
+  font-size: 3rem;
+  font-weight: bold;
+  text-align: center;
+  white-space: nowrap;
+  opacity: 0;
+  transform: scale(0);
+  transition: opacity 1s ease, transform 1s ease;
 }
 
-/* Canvas Styling */
-canvas {
-  display: block; /* Full-screen canvas without scrollbars */
+/* Styling for the Name */
+#welcome-text span {
+  color: #ffcc00;
+  font-size: 4.5rem;
+  font-weight: 900;
+  display: inline-block;
+}
+
+/* Zoom-in Animation */
+@keyframes zoomIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.zoom-in {
+  animation: zoomIn 1s ease-out forwards;
+}
+
+/* About Section Styling */
+.about-section {
+  font-size: 2rem;
+  color: white;
+  text-align: center;
+  width: 80%;
+  max-width: 800px;
+  padding: 20px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 1s ease, transform 1s ease;
+}
+
+/* Active section styling */
+.active-section .about-section,
+.active-section #welcome-text {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Scroll indicator */
+.scroll-indicator {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 1rem;
+  opacity: 0.7;
+  animation: pulse 1.5s infinite alternate;
+}
+
+@keyframes pulse {
+  from { opacity: 0.3; }
+  to { opacity: 0.8; }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .sidebar {
+    padding: 0 10px;
+  }
+
+  .sidebar-nav .nav-list {
+    gap: 10px;
+  }
+
+  .sidebar-nav .nav-link {
+    font-size: 0.94rem;
+    padding: 8px 10px;
+  }
+
+  #welcome-text {
+    font-size: 2rem;
+  }
+  
+  #welcome-text span {
+    font-size: 4rem;
+  }
+  
+  .about-section {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  #welcome-text {
+    font-size: 1.5rem;
+    white-space: normal;
+  }
+  
+  #welcome-text span {
+    font-size: 2rem;
+  }
+  
+  .about-section {
+    font-size: 1.2rem;
+    padding: 15px;
+  }
 }

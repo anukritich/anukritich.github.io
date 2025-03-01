@@ -1,99 +1,151 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Ensure loading screen elements exist
     const loadingScreen = document.getElementById("loading-screen");
-    const spinner = document.getElementById("spinner");
     const loadingText = document.getElementById("loading-text");
+    const sections = document.querySelectorAll(".story-section");
+    const welcomeText = document.getElementById("welcome-text");
 
-    if (loadingScreen && spinner && loadingText) {
-        console.log("Loading screen found, initializing loading sequence");
-        handleLoadingScreen();
-    } else {
-        console.log("Loading screen elements not found, initializing sidebar directly");
-        initializeSidebar();
+    let currentSection = 0;
+    let isScrolling = false;
+    let lastScrollTime = 0;
+    const scrollDelay = 1000; // Delay between scroll actions in ms
+
+    // Add scroll indicators to each section
+    sections.forEach((section, index) => {
+        if (index < sections.length - 1) { // Don't add to last section
+            const indicator = document.createElement("div");
+            indicator.className = "scroll-indicator";
+            indicator.innerHTML = "Scroll down ↓";
+            section.appendChild(indicator);
+        }
+    });
+
+    // Simulate loading process with percentage
+    function simulateLoading() {
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 5;
+            if (loadingText) {
+                loadingText.textContent = `Loading... ${progress}%`;
+            }
+
+            if (progress >= 100) {
+                clearInterval(interval);
+                setTimeout(() => {
+                    hideLoadingScreen();
+                }, 500);
+            }
+        }, 100);
     }
 
-    /**
-     * Handles the loading screen animation and dismissal
-     */
-    function handleLoadingScreen() {
-        const resources = {
-            images: Array.from(document.querySelectorAll("img")),
-            stylesheets: Array.from(document.querySelectorAll('link[rel="stylesheet"]')),
-            scripts: Array.from(document.querySelectorAll('script[src]')),
-        };
-
-        const totalResources = Math.max(
-            resources.images.length + resources.stylesheets.length + resources.scripts.length,
-            1
-        );
-
-        let loadedCount = 0;
-
-        function updateProgress() {
-            loadedCount++;
-            const percentage = Math.min(Math.round((loadedCount / totalResources) * 100), 100);
-            loadingText.textContent = `Loading... ${percentage}%`;
-
-            if (percentage >= 100) {
-                completeLoading();
-            }
-        }
-
-        // Track image loading
-        resources.images.forEach((img) => {
-            if (img.complete) {
-                updateProgress();
-            } else {
-                img.addEventListener("load", updateProgress);
-                img.addEventListener("error", updateProgress);
-            }
-        });
-
-        // Simulate stylesheet and script loading
-        resources.stylesheets.forEach(() => setTimeout(updateProgress, 100));
-        resources.scripts.forEach(() => setTimeout(updateProgress, 150));
-
-        // Timeout fallback (ensures loading completes within 3 seconds)
+    // Hide loading screen and start the story
+    function hideLoadingScreen() {
+        loadingScreen.classList.add("fade-out");
         setTimeout(() => {
-            if (loadedCount < totalResources) {
-                loadingText.textContent = "Loading... 100%";
-                completeLoading();
-            }
-        }, 3000);
-
-        function completeLoading() {
-            loadingScreen.classList.add("fade-out");
-            setTimeout(() => {
-                loadingScreen.style.display = "none";
-                initializeSidebar();
-            }, 500);
-        }
+            loadingScreen.style.display = "none";
+            startStory();
+        }, 500);
     }
 
-    /**
-     * Initializes sidebar toggle functionality
-     */
-    function initializeSidebar() {
-        const sidebar = document.querySelector(".sidebar");
-        const sidebarToggler = document.querySelector(".sidebar-toggler");
+    // Start the story with welcome text
+    function startStory() {
+        // Mark first section as active
+        sections[0].classList.add("active-section");
+        welcomeText.classList.add("zoom-in");
 
-        if (sidebar && sidebarToggler) {
-            const icon = sidebarToggler.querySelector(".material-symbols-rounded");
+        // Set up scroll event
+        window.addEventListener("wheel", handleMouseWheel);
+        window.addEventListener("touchstart", handleTouchStart);
+        window.addEventListener("touchmove", handleTouchMove);
+    }
 
-            if (icon) {
-                icon.style.transform = sidebar.classList.contains("collapsed") ? "rotate(0deg)" : "rotate(180deg)";
+    // Track touch position for mobile scrolling
+    let touchStartY = 0;
 
-                sidebarToggler.addEventListener("click", () => {
-                    sidebar.classList.toggle("collapsed");
-                    icon.style.transform = sidebar.classList.contains("collapsed") ? "rotate(0deg)" : "rotate(180deg)";
-                });
+    function handleTouchStart(e) {
+        touchStartY = e.touches[0].clientY;
+    }
 
-                console.log("Sidebar functionality initialized");
+    function handleTouchMove(e) {
+        if (isScrolling) return;
+
+        const touchY = e.touches[0].clientY;
+        const diff = touchStartY - touchY;
+
+        // Detect scroll direction with a threshold
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) {
+                scrollToNextSection();
             } else {
-                console.error("Sidebar icon not found");
+                scrollToPrevSection();
             }
-        } else {
-            console.error("Sidebar or toggler button not found!");
+            touchStartY = touchY; // Reset touch position
         }
     }
+
+    // Handle mouse wheel events
+    function handleMouseWheel(e) {
+        const now = Date.now();
+
+        // Throttle scroll events
+        if (isScrolling || now - lastScrollTime < scrollDelay) {
+            return;
+        }
+
+        lastScrollTime = now;
+
+        if (e.deltaY > 0) {
+            // Scrolling down
+            scrollToNextSection();
+        } else {
+            // Scrolling up
+            scrollToPrevSection();
+        }
+    }
+
+    // Scroll to the next section
+    function scrollToNextSection() {
+        if (currentSection < sections.length - 1) {
+            isScrolling = true;
+
+            // Hide current section
+            sections[currentSection].classList.remove("active-section");
+
+            // Show next section
+            currentSection++;
+            sections[currentSection].classList.add("active-section");
+
+            // Scroll to the section
+            sections[currentSection].scrollIntoView({ behavior: "smooth" });
+
+            // Reset scrolling flag after animation
+            setTimeout(() => {
+                isScrolling = false;
+            }, scrollDelay);
+        }
+    }
+
+    // Scroll to the previous section
+    function scrollToPrevSection() {
+        if (currentSection > 0) {
+            isScrolling = true;
+
+            // Hide current section
+            sections[currentSection].classList.remove("active-section");
+
+            // Show previous section
+            currentSection--;
+            sections[currentSection].classList.add("active-section");
+
+            // Scroll to the section
+            sections[currentSection].scrollIntoView({ behavior: "smooth" });
+
+            // Reset scrolling flag after animation
+            setTimeout(() => {
+                isScrolling = false;
+            }, scrollDelay);
+        }
+    }
+
+    // Start the loading simulation
+    simulateLoading();
 });
