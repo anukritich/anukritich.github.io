@@ -13,8 +13,8 @@
   font-family: Arial, sans-serif;
   z-index: 1000;
   transition: opacity 0.5s ease-out;
-  
 }
+
 
 /* Spinner Animation */
 #spinner {
@@ -31,6 +31,7 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
 /* General Reset */
 body {
   margin: 0;

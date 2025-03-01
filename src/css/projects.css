@@ -154,7 +154,7 @@ header {
 .grid-item img:hover {
     transform: scale(1.05);
     color: black;
-    opacity: 70%;
+    opacity: 20%;
 }
 .grid-item {
   position: relative;
@@ -166,7 +166,7 @@ header {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color:black;
+  color:white;
   opacity: 0;
   visibility: hidden;
   text-align: center;
