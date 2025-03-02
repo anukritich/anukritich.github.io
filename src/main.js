@@ -171,160 +171,274 @@ const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 
-// Galaxy parameters
-const params = {
-    count: 50000,
-    size: 0.02,
-    radius: 5,
-    branches: 3,
-    spin: 1,
-    randomness: 0.2,
-    randomnessPower: 3,
-    insideColor: 0x9977ff,
-    outsideColor: 0x1b3984,
-    fogDensity: 0.05
-};
-
-// Add fog to scene
-scene.fog = new THREE.FogExp2(0x000b24, params.fogDensity);
+// Scene background
 scene.background = new THREE.Color(0x000000);
 
-// Planet effect on the bottom
-const createPlanet = () => {
-    const planet = new THREE.Mesh(
-        new THREE.SphereGeometry(20, 32, 32),
-        new THREE.MeshBasicMaterial({
-            color: 0x0077ff,
-            transparent: true,
-            opacity: 0.6
-        })
-    );
-    planet.position.set(0, -30, 0);
+
+
+// Create animated fog volumes
+const createFogVolumes = () => {
+    const fogVolumes = [];
+    const fogCount = 20;
+    const textureLoader = new THREE.TextureLoader();
     
-    // Add glow effect
-    const glowGeometry = new THREE.SphereGeometry(23, 32, 32);
-    const glowMaterial = new THREE.ShaderMaterial({
+    // Create a procedural cloud texture with noise
+    const noiseCanvas = document.createElement('canvas');
+    noiseCanvas.width = 128;
+    noiseCanvas.height = 128;
+    const ctx = noiseCanvas.getContext('2d');
+    
+    // Create gradient noise
+    const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 128, 128);
+    
+    // Create noise texture
+    const noiseTexture = new THREE.CanvasTexture(noiseCanvas);
+    
+    // Create multiple fog volumes
+    for (let i = 0; i < fogCount; i++) {
+        // Randomize fog colors - purples and blues
+        const hue = Math.random() * 0.3 + 0.6; // 0.6-0.9 range in hue (purples to blues)
+        const color = new THREE.Color().setHSL(hue, 0.8, 0.5);
+        
+        const fogMaterial = new THREE.MeshBasicMaterial({
+            map: noiseTexture, 
+            transparent: true,
+            opacity: Math.random() * 0.3 + 0.1,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            color: color
+        });
+        
+        // Create different sized planes for fog
+        const size = Math.random() * 60 + 40;
+        const fogGeometry = new THREE.PlaneGeometry(size, size);
+        const fog = new THREE.Mesh(fogGeometry, fogMaterial);
+        
+        // Position fog throughout the scene
+        const radius = Math.random() * 80 + 20;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * Math.PI - Math.PI/2;
+        
+        fog.position.set(
+            radius * Math.sin(theta) * Math.cos(phi),
+            radius * Math.sin(phi) + (Math.random() - 0.5) * 30,
+            radius * Math.cos(theta) * Math.cos(phi)
+        );
+        
+        // Random rotation
+        fog.rotation.x = Math.random() * Math.PI;
+        fog.rotation.y = Math.random() * Math.PI;
+        fog.rotation.z = Math.random() * Math.PI;
+        
+        // Animation parameters
+        fog.userData = {
+            // Movement
+            velocity: {
+                x: (Math.random() - 0.5) * 0.1,
+                y: (Math.random() - 0.5) * 0.05,
+                z: (Math.random() - 0.5) * 0.1
+            },
+            // Rotation
+            spin: {
+                x: (Math.random() - 0.5) * 0.005,
+                y: (Math.random() - 0.5) * 0.005,
+                z: (Math.random() - 0.5) * 0.005
+            },
+            // Wave animation
+            wave: {
+                amplitude: Math.random() * 5 + 2,
+                frequency: Math.random() * 0.02 + 0.01,
+                offset: Math.random() * Math.PI * 2
+            },
+            // Scale animation
+            scale: {
+                factor: Math.random() * 0.2 + 0.9,
+                speed: Math.random() * 0.01 + 0.005
+            },
+            // Original position for orbital movement
+            origin: {
+                x: fog.position.x,
+                y: fog.position.y,
+                z: fog.position.z
+            },
+            // Opacity pulsation
+            opacity: {
+                min: Math.random() * 0.1 + 0.05,
+                max: Math.random() * 0.2 + 0.2,
+                speed: Math.random() * 0.01 + 0.005
+            }
+        };
+        
+        fogVolumes.push(fog);
+        scene.add(fog);
+    }
+    
+    return fogVolumes;
+};
+
+// Create distant stars
+const createStarfield = () => {
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 1000;
+    const starPositions = new Float32Array(starCount * 3);
+    const starSizes = new Float32Array(starCount);
+    
+    for (let i = 0; i < starCount; i++) {
+        const i3 = i * 3;
+        // Place stars far away in a sphere
+        const radius = Math.random() * 200 + 400;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * Math.PI * 2;
+        
+        starPositions[i3] = radius * Math.sin(theta) * Math.cos(phi);
+        starPositions[i3 + 1] = radius * Math.sin(phi);
+        starPositions[i3 + 2] = radius * Math.cos(theta) * Math.cos(phi);
+        
+        // Random star sizes
+        starSizes[i] = Math.random() * 2 + 0.5;
+    }
+    
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    starGeometry.setAttribute('aScale', new THREE.BufferAttribute(starSizes, 1));
+    
+    const starMaterial = new THREE.ShaderMaterial({
         uniforms: {
-            glowColor: { value: new THREE.Color(0x00aaff) },
-            viewVector: { value: camera.position }
+            uTime: { value: 0 },
+            uPixelRatio: { value: renderer.getPixelRatio() }
         },
         vertexShader: `
-            uniform vec3 viewVector;
-            varying float intensity;
+            attribute float aScale;
+            uniform float uTime;
+            uniform float uPixelRatio;
+            
             void main() {
-                vec3 vNormal = normalize(normalMatrix * normal);
-                vec3 vNormel = normalize(normalMatrix * viewVector);
-                intensity = pow(0.6 - dot(vNormal, vNormel), 2.0);
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                gl_Position = projectionMatrix * mvPosition;
+                
+                // Calculate twinkle effect
+                float twinkle = sin(uTime * 0.5 + position.x * 100.0) * 0.5 + 0.5;
+                
+                // Size attenuation
+                gl_PointSize = aScale * uPixelRatio * (300.0 / -mvPosition.z) * (0.5 + 0.5 * twinkle);
             }
         `,
         fragmentShader: `
-            uniform vec3 glowColor;
-            varying float intensity;
             void main() {
-                vec3 glow = glowColor * intensity;
-                gl_FragColor = vec4(glow, 0.5);
+                // Create a soft glow
+                float distToCenter = length(gl_PointCoord - vec2(0.5));
+                float strength = 1.0 - smoothstep(0.0, 0.5, distToCenter);
+                
+                gl_FragColor = vec4(1.0, 1.0, 1.0, strength);
             }
         `,
-        side: THREE.FrontSide,
         blending: THREE.AdditiveBlending,
+        depthWrite: false,
         transparent: true
     });
     
-    const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
-    glowMesh.position.set(0, -30, 0);
-    scene.add(glowMesh);
-    scene.add(planet);
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    scene.add(stars);
+    
+    return stars;
 };
 
-// Create galaxy
-const generateGalaxy = () => {
-    // Create geometry
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(params.count * 3);
-    const colors = new Float32Array(params.count * 3);
-    const scales = new Float32Array(params.count);
+// Create moving nebula particles
+const createNebulaParticles = () => {
+    const particleCount = 5000;
+    const particlesGeometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+    const scales = new Float32Array(particleCount);
+    const velocities = new Float32Array(particleCount * 3);
     
-    const insideColor = new THREE.Color(params.insideColor);
-    const outsideColor = new THREE.Color(params.outsideColor);
+    // Create color palette
+    const colorPalette = [
+        new THREE.Color(0x9977ff), // Purple
+        new THREE.Color(0x8866ee), // Light purple
+        new THREE.Color(0x5588ff), // Blue
+        new THREE.Color(0x7744ff)  // Deep purple
+    ];
     
-    for (let i = 0; i < params.count; i++) {
+    for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
         
-        // Position
-        const radius = Math.random() * params.radius;
-        const spinAngle = radius * params.spin;
-        const branchAngle = (i % params.branches) / params.branches * Math.PI * 2;
+        // Random position in a spherical volume
+        const radius = Math.random() * 100 + 10;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * Math.PI - Math.PI/2;
         
-        const randomX = Math.pow(Math.random(), params.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) * params.randomness * radius;
-        const randomY = Math.pow(Math.random(), params.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) * params.randomness * radius;
-        const randomZ = Math.pow(Math.random(), params.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) * params.randomness * radius;
+        positions[i3] = radius * Math.sin(theta) * Math.cos(phi);
+        positions[i3 + 1] = radius * Math.sin(phi);
+        positions[i3 + 2] = radius * Math.cos(theta) * Math.cos(phi);
         
-        positions[i3] = Math.cos(branchAngle + spinAngle) * radius + randomX;
-        positions[i3 + 1] = randomY; // Flat galaxy
-        positions[i3 + 2] = Math.sin(branchAngle + spinAngle) * radius + randomZ;
+        // Random color from palette
+        const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+        colors[i3] = color.r;
+        colors[i3 + 1] = color.g;
+        colors[i3 + 2] = color.b;
         
-        // Color
-        const mixedColor = insideColor.clone();
-        mixedColor.lerp(outsideColor, radius / params.radius);
+        // Random size
+        scales[i] = Math.random() * 4 + 1;
         
-        colors[i3] = mixedColor.r;
-        colors[i3 + 1] = mixedColor.g;
-        colors[i3 + 2] = mixedColor.b;
-        
-        // Scale (for variability)
-        scales[i] = Math.random() * 2.5;
+        // Random velocity
+        velocities[i3] = (Math.random() - 0.5) * 0.05;
+        velocities[i3 + 1] = (Math.random() - 0.5) * 0.05;
+        velocities[i3 + 2] = (Math.random() - 0.5) * 0.05;
     }
     
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    geometry.setAttribute('aScale', new THREE.BufferAttribute(scales, 1));
+    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    particlesGeometry.setAttribute('aScale', new THREE.BufferAttribute(scales, 1));
+    particlesGeometry.setAttribute('aVelocity', new THREE.BufferAttribute(velocities, 3));
     
-    // Material
-    const material = new THREE.ShaderMaterial({
+    const particlesMaterial = new THREE.ShaderMaterial({
         uniforms: {
             uTime: { value: 0 },
-            uSize: { value: params.size * renderer.getPixelRatio() }
+            uPixelRatio: { value: renderer.getPixelRatio() }
         },
         vertexShader: `
             attribute vec3 color;
             attribute float aScale;
+            attribute vec3 aVelocity;
             varying vec3 vColor;
             uniform float uTime;
-            uniform float uSize;
+            uniform float uPixelRatio;
             
             void main() {
                 vColor = color;
                 
-                // Position
-                vec4 modelPosition = modelMatrix * vec4(position, 1.0);
+                // Apply velocity over time
+                vec3 movingPosition = position + aVelocity * uTime * 10.0;
                 
-                // Slow rotation
-                float angle = uTime * 0.05;
-                mat2 rotation = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-                modelPosition.xz = rotation * modelPosition.xz;
+                // Keep particles within bounds using modulo-like behavior
+                float bound = 150.0;
+                if(abs(movingPosition.x) > bound) movingPosition.x = -sign(movingPosition.x) * (bound - 10.0);
+                if(abs(movingPosition.y) > bound) movingPosition.y = -sign(movingPosition.y) * (bound - 10.0);
+                if(abs(movingPosition.z) > bound) movingPosition.z = -sign(movingPosition.z) * (bound - 10.0);
                 
-                vec4 viewPosition = viewMatrix * modelPosition;
-                vec4 projectedPosition = projectionMatrix * viewPosition;
+                vec4 mvPosition = modelViewMatrix * vec4(movingPosition, 1.0);
+                gl_Position = projectionMatrix * mvPosition;
                 
-                gl_Position = projectedPosition;
-                
-                // Size
-                gl_PointSize = uSize * aScale * (1.0 / -viewPosition.z);
+                // Pulsating size
+                float pulse = sin(uTime + aScale) * 0.5 + 0.5;
+                gl_PointSize = aScale * uPixelRatio * (600.0 / -mvPosition.z) * (0.7 + 0.3 * pulse);
             }
         `,
         fragmentShader: `
             varying vec3 vColor;
             
             void main() {
-                // Disc point pattern
-                float strength = distance(gl_PointCoord, vec2(0.5));
-                strength = 1.0 - strength;
-                strength = pow(strength, 5.0);
+                // Soft particle edge
+                float distToCenter = length(gl_PointCoord - vec2(0.5));
+                float strength = 1.0 - smoothstep(0.0, 0.5, distToCenter);
                 
-                // Final color
-                vec3 color = mix(vec3(0.0), vColor, strength);
-                gl_FragColor = vec4(color, strength * 0.8);
+                gl_FragColor = vec4(vColor, strength * 0.7);
             }
         `,
         transparent: true,
@@ -333,116 +447,176 @@ const generateGalaxy = () => {
         vertexColors: true
     });
     
-    // Points
-    const points = new THREE.Points(geometry, material);
-    scene.add(points);
+    const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+    scene.add(particles);
     
-    return { points, material };
+    return particles;
 };
 
-// Create nebula clouds
-const createNebulaClouds = () => {
-    const clouds = [];
-    const cloudCount = 5;
-    
-    for (let i = 0; i < cloudCount; i++) {
-        const cloudGeometry = new THREE.PlaneGeometry(50, 50);
-        const cloudMaterial = new THREE.MeshBasicMaterial({
-            color: new THREE.Color(
-                Math.random() * 0.2 + 0.5, 
-                Math.random() * 0.2, 
-                Math.random() * 0.5 + 0.5
-            ),
-            transparent: true,
-            opacity: Math.random() * 0.2 + 0.1,
-            side: THREE.DoubleSide,
-            blending: THREE.AdditiveBlending
-        });
-        
-        const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
-        
-        // Random position
-        const distance = Math.random() * 30 + 10;
-        const angle = Math.random() * Math.PI * 2;
-        
-        cloud.position.set(
-            Math.cos(angle) * distance,
-            (Math.random() - 0.5) * 30,
-            Math.sin(angle) * distance
-        );
-        
-        cloud.rotation.x = Math.random() * Math.PI;
-        cloud.rotation.y = Math.random() * Math.PI;
-        cloud.rotation.z = Math.random() * Math.PI;
-        
-        // Store animation data
-        cloud.userData = {
-            rotationSpeed: {
-                x: (Math.random() - 0.5) * 0.001,
-                y: (Math.random() - 0.5) * 0.001,
-                z: (Math.random() - 0.5) * 0.001
-            },
-            floatSpeed: {
-                x: (Math.random() - 0.5) * 0.01,
-                y: (Math.random() - 0.5) * 0.01,
-                z: (Math.random() - 0.5) * 0.01
-            }
-        };
-        
-        clouds.push(cloud);
-        scene.add(cloud);
-    }
-    
-    return clouds;
-};
+// Create all scene elements
+const fogVolumes = createFogVolumes();
+const starfield = createStarfield();
+const nebulaParticles = createNebulaParticles();
 
-const galaxy = generateGalaxy();
-const nebulaClouds = createNebulaClouds();
-createPlanet();
 
-camera.position.z = 75;
-camera.position.y = 30;
+// Set camera position
+camera.position.z = 100;
+camera.position.y = 20;
 camera.lookAt(0, 0, 0);
-
-// Add soft ambient light
-const ambientLight = new THREE.AmbientLight(0x7744ff, 0.5);
-scene.add(ambientLight);
 
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
     
-    const elapsedTime = Date.now() * 0.001;
+    const time = Date.now() * 0.001;
     
-    // Update galaxy uniforms
-    galaxy.material.uniforms.uTime.value = elapsedTime;
+   // Update starfield
+   if (starfield.material.uniforms) {
+    starfield.material.uniforms.uTime.value = time;
+}
+
+// Update nebula particles
+if (nebulaParticles.material.uniforms) {
+    nebulaParticles.material.uniforms.uTime.value = time;
+}
+
+// Animate fog volumes - the key to creating moving fog
+fogVolumes.forEach(fog => {
+    // Apply rotation
+    fog.rotation.x += fog.userData.spin.x;
+    fog.rotation.y += fog.userData.spin.y;
+    fog.rotation.z += fog.userData.spin.z;
     
-    // Animate nebula clouds
-    nebulaClouds.forEach(cloud => {
-        // Rotation
-        cloud.rotation.x += cloud.userData.rotationSpeed.x;
-        cloud.rotation.y += cloud.userData.rotationSpeed.y;
-        cloud.rotation.z += cloud.userData.rotationSpeed.z;
-        
-        // Floating movement
-        cloud.position.x += Math.sin(elapsedTime * 0.2) * cloud.userData.floatSpeed.x;
-        cloud.position.y += Math.cos(elapsedTime * 0.3) * cloud.userData.floatSpeed.y;
-        cloud.position.z += Math.sin(elapsedTime * 0.4) * cloud.userData.floatSpeed.z;
-    });
+    // Apply wave-like position changes
+    const waveX = Math.sin(time * fog.userData.wave.frequency + fog.userData.wave.offset) * fog.userData.wave.amplitude;
+    const waveZ = Math.cos(time * fog.userData.wave.frequency + fog.userData.wave.offset) * fog.userData.wave.amplitude;
     
-    // Slight camera movement
-    camera.position.x = Math.sin(elapsedTime * 0.1) * 5;
-    camera.position.z = 75 + Math.cos(elapsedTime * 0.1) * 5;
-    camera.lookAt(0, 0, 0);
+    // Apply linear movement
+    fog.position.x += fog.userData.velocity.x;
+    fog.position.y += fog.userData.velocity.y;
+    fog.position.z += fog.userData.velocity.z;
     
-    renderer.render(scene, camera);
+    // Add wave movement
+    fog.position.x += waveX * 0.05;
+    fog.position.z += waveZ * 0.05;
+    
+    // Keep fog within bounds
+    const bound = 150;
+    if (Math.abs(fog.position.x) > bound) {
+        fog.position.x = -Math.sign(fog.position.x) * (bound - 20);
+    }
+    if (Math.abs(fog.position.y) > bound) {
+        fog.position.y = -Math.sign(fog.position.y) * (bound - 20);
+    }
+    if (Math.abs(fog.position.z) > bound) {
+        fog.position.z = -Math.sign(fog.position.z) * (bound - 20);
+    }
+    
+    // Scaling animation
+    const scale = 1.0 + Math.sin(time * fog.userData.scale.speed) * fog.userData.scale.factor * 0.2;
+    fog.scale.set(scale, scale, scale);
+    
+    // Opacity pulsation
+    const opacityFactor = fog.userData.opacity.min + 
+        (Math.sin(time * fog.userData.opacity.speed + fog.userData.wave.offset) * 0.5 + 0.5) * 
+        (fog.userData.opacity.max - fog.userData.opacity.min);
+    fog.material.opacity = opacityFactor;
+});
+
+// Create slow orbital movement for camera
+const cameraRadius = 100;
+const cameraSpeed = 0.05;
+const cameraAngle = time * cameraSpeed;
+
+camera.position.x = Math.sin(cameraAngle) * cameraRadius * 0.2;
+camera.position.z = Math.cos(cameraAngle) * cameraRadius;
+camera.position.y = 20 + Math.sin(time * 0.2) * 5;  // Gentle up/down movement
+
+// Always look at center
+camera.lookAt(0, 0, 0);
+
+// Update planet glow shader
+scene.children.forEach(child => {
+    if (child.material && child.material.uniforms && child.material.uniforms.viewVector) {
+        child.material.uniforms.viewVector.value = camera.position;
+    }
+});
+
+renderer.render(scene, camera);
 }
 
 animate();
 
 // Resize event handling
 window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+camera.aspect = window.innerWidth / window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+// Update star and particle pixel ratio if needed
+if (starfield.material.uniforms && starfield.material.uniforms.uPixelRatio) {
+    starfield.material.uniforms.uPixelRatio.value = renderer.getPixelRatio();
+}
+
+if (nebulaParticles.material.uniforms && nebulaParticles.material.uniforms.uPixelRatio) {
+    nebulaParticles.material.uniforms.uPixelRatio.value = renderer.getPixelRatio();
+}
 });
+
+// Optional: add more volumetric fog clouds
+function addMoreFogClouds() {
+// Create 5 large background fog clouds
+for (let i = 0; i < 5; i++) {
+    const size = Math.random() * 120 + 100;
+    const fogGeometry = new THREE.PlaneGeometry(size, size);
+    
+    // Darker blue-purple for background depth
+    const color = new THREE.Color(
+        0.2 + Math.random() * 0.1,  // Red component
+        0.1 + Math.random() * 0.1,  // Green component
+        0.4 + Math.random() * 0.2   // Blue component
+    );
+    
+    const fogMaterial = new THREE.MeshBasicMaterial({
+        color: color,
+        transparent: true,
+        opacity: 0.05 + Math.random() * 0.05,  // Very subtle
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+    });
+    
+    const fog = new THREE.Mesh(fogGeometry, fogMaterial);
+    
+    // Position these further back
+    const distance = Math.random() * 50 + 150;
+    const angle = Math.random() * Math.PI * 2;
+    
+    fog.position.set(
+        Math.cos(angle) * distance,
+        (Math.random() - 0.5) * 100,
+        Math.sin(angle) * distance
+    );
+    
+    fog.lookAt(camera.position);  // Face the camera
+    
+    // Very slow movement
+    fog.userData = {
+        velocity: {
+            x: (Math.random() - 0.5) * 0.02,
+            y: (Math.random() - 0.5) * 0.01,
+            z: (Math.random() - 0.5) * 0.02
+        },
+        spin: {
+            x: (Math.random() - 0.5) * 0.001,
+            y: (Math.random() - 0.5) * 0.001,
+            z: (Math.random() - 0.5) * 0.001
+        }
+    };
+    
+    fogVolumes.push(fog);
+    scene.add(fog);
+}
+}
+
+// Call this function to add more depth to the scene
+addMoreFogClouds();
