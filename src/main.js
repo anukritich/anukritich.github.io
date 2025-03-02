@@ -468,7 +468,7 @@ camera.lookAt(0, 0, 0);
 function animate() {
     requestAnimationFrame(animate);
     
-    const time = Date.now() * 0.001;
+    const time = Date.now() * 0.01;
     
    // Update starfield
    if (starfield.material.uniforms) {
@@ -501,7 +501,7 @@ fogVolumes.forEach(fog => {
     fog.position.z += waveZ * 0.05;
     
     // Keep fog within bounds
-    const bound = 150;
+    const bound = 100;
     if (Math.abs(fog.position.x) > bound) {
         fog.position.x = -Math.sign(fog.position.x) * (bound - 20);
     }
