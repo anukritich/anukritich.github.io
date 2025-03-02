@@ -1,5 +1,29 @@
+// Cursor elements
+const cursorDot = document.querySelector(".cursor-dot");
+const cursorOutline = document.querySelector(".cursor-outline");
+
+if (cursorDot && cursorOutline) {
+    let dotX = 0, dotY = 0;
+    let outlineX = 0, outlineY = 0;
+    const speed = 0.1;
+
+    document.addEventListener("mousemove", (e) => {
+        dotX = e.clientX;
+        dotY = e.clientY;
+        cursorDot.style.transform = `translate(${dotX}px, ${dotY}px)`;
+    });
+
+    function animateCursor() {
+        outlineX += (dotX - outlineX) * speed;
+        outlineY += (dotY - outlineY) * speed;
+        cursorOutline.style.transform = `translate(${outlineX}px, ${outlineY}px)`;
+        requestAnimationFrame(animateCursor);
+    }
+
+    animateCursor();
+}
+
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass';
@@ -13,14 +37,9 @@ class SceneManager {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.clock = new THREE.Clock();
-        this.mixer = null;
-        this.secondModelMixer = null;
-        this.currentModel = null;
-        this.progress = 0;
-        this.isMousePressed = false;
-
-        this.progressBar = null;
-        this.instructionText = null;
+        this.galaxy = null;
+        this.isTyping = false;
+        this.typingTimeout = null;
 
         this.init();
     }
@@ -28,25 +47,18 @@ class SceneManager {
     init() {
         this.setupScene();
         this.setupLights();
-        this.setupGround();
         this.setupPostProcessing();
         this.setupEventListeners();
-        this.createUI();
-        this.loadInitialDog();
+        this.loadGalaxy();
         this.animate();
     }
 
     setupScene() {
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color('#F8F8F8');
+        this.scene.background = new THREE.Color(0x000000);
 
-        this.camera = new THREE.PerspectiveCamera(
-            75,
-            window.innerWidth / window.innerHeight,
-            0.1,
-            1000
-        );
-        this.camera.position.z = 20;
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera.position.z = 17;
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -60,16 +72,7 @@ class SceneManager {
         this.scene.add(ambientLight);
 
         const hemisphereLight = new THREE.HemisphereLight(0xeeeeee, 0x444444, 9.5);
-        hemisphereLight.position.set(0, 0, 0);
         this.scene.add(hemisphereLight);
-    }
-
-    setupGround() {
-        const planeGeometry = new THREE.PlaneGeometry(100, 100);
-        const planeMaterial = new THREE.ShadowMaterial({ opacity: 0 });
-        const groundPlane = new THREE.Mesh(planeGeometry, planeMaterial);
-        groundPlane.rotation.x = -Math.PI / 2;
-        this.scene.add(groundPlane);
     }
 
     setupPostProcessing() {
@@ -78,106 +81,11 @@ class SceneManager {
         this.composer.addPass(new SMAAPass(window.innerWidth, window.innerHeight));
     }
 
-    createUI() {
-        const barContainer = document.createElement('div');
-        Object.assign(barContainer.style, {
-            position: 'absolute',
-            top: '78%',
-            left: '20%',
-            width: '200px',
-            height: '20px',
-            backgroundColor: '#ddd',
-            borderRadius: '10px'
-        });
-        document.body.appendChild(barContainer);
+    
+    
 
-        this.progressBar = document.createElement('div');
-        Object.assign(this.progressBar.style, {
-            width: '0%',
-            height: '100%',
-            backgroundColor: '#4CAF50',
-            borderRadius: '10px'
-        });
-        barContainer.appendChild(this.progressBar);
-
-        this.instructionText = document.createElement('div');
-        Object.assign(this.instructionText.style, {
-            position: 'absolute',
-            top: '78%',
-            left: '25%',
-            fontSize: '14px',
-            color: '#333'
-        });
-        this.instructionText.innerText = 'Click Me!';
-        document.body.appendChild(this.instructionText);
-    }
-
-    loadModel(path, callback) {
-        const loader = new GLTFLoader();
-        loader.load(path, (gltf) => {
-            const model = gltf.scene;
-            model.scale.set(0.21, 0.21, 0.21);
-            model.position.set(-13, -1.0, 0);
-            model.rotation.y = Math.PI / 2.25;
-
-            if (callback) callback(model, gltf.animations);
-        },
-        (xhr) => {
-            const percentage = Math.round((xhr.loaded / xhr.total) * 100);
-            document.getElementById('loading-text').textContent = `Loading... ${percentage}%`;
-        },
-        (error) => {
-            console.error('Error loading model:', error);
-        });
-    }
-
-    loadInitialDog() {
-        this.loadModel('/assets/models/dogidle.glb', (model, animations) => {
-            this.currentModel = model;
-            this.scene.add(model);
-
-            this.mixer = new THREE.AnimationMixer(model);
-            animations.forEach(clip => {
-                this.mixer.clipAction(clip).play();
-            });
-        });
-    }
-
-    loadJumpingDog() {
-        this.loadModel('/assets/models/dogjump.glb', (model, animations) => {
-            this.currentModel = model;
-            this.scene.add(model);
-
-            this.secondModelMixer = new THREE.AnimationMixer(model);
-            animations.forEach(clip => {
-                this.secondModelMixer.clipAction(clip).play();
-            });
-        });
-    }
-
-    handleProgress() {
-        if (this.progress < 100) {
-            this.progress += 33.33;
-            if (this.progress > 100) this.progress = 100;
-
-            this.progressBar.style.width = `${this.progress}%`;
-
-            if (this.progress === 100) {
-                this.instructionText.innerText = 'Contact Unlocked!';
-                this.instructionText.style.left = '23%';
-
-                window.dispatchEvent(
-                    new CustomEvent('barFull', {
-                        detail: { isBarFull: true }
-                    })
-                );
-
-                if (this.currentModel) {
-                    this.scene.remove(this.currentModel);
-                    this.loadJumpingDog();
-                }
-            }
-        }
+    loadGalaxy() {
+        this.galaxy = new Galaxy(this.scene);
     }
 
     setupEventListeners() {
@@ -188,130 +96,143 @@ class SceneManager {
             this.composer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        window.addEventListener('mousedown', (event) => {
-            this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-            this.raycaster.setFromCamera(this.mouse, this.camera);
-            const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+        // Detect typing in input and textarea fields
+        document.addEventListener("input", () => this.startTyping());
+    }
 
-            if (intersects.length > 0) {
-                this.handleProgress();
-            }
-        });
+    startTyping() {
+        if (!this.isTyping) {
+            this.isTyping = true;
+        }
+
+        // Reset typing timeout
+        clearTimeout(this.typingTimeout);
+
+        // Stop galaxy rotation after 1 second of inactivity
+        this.typingTimeout = setTimeout(() => {
+            this.isTyping = false;
+        }, 1000);
     }
 
     animate() {
         requestAnimationFrame(() => this.animate());
 
-        const delta = this.clock.getDelta();
-
-        if (this.mixer) this.mixer.update(delta);
-        if (this.secondModelMixer) this.secondModelMixer.update(delta);
+        // Rotate galaxy when typing
+        if (this.isTyping && this.galaxy) {
+            this.galaxy.animateGalaxy();
+        }
 
         this.composer.render();
     }
 }
 
-// Wait for DOM to be fully loaded before initializing
+class Galaxy {
+    constructor(scene) {
+        this.scene = scene;
+        this.particles = null;
+        this.initGalaxy();
+    }
+
+    initGalaxy() {
+        const particleCount = 20000;
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+        const radius = 2;
+
+        for (let i = 0; i < particleCount; i++) {
+            // Spherical distribution formula
+            let theta = Math.random() * Math.PI * 2; // Random angle in xy-plane
+            let phi = Math.acos(2 * Math.random() - 1); // Random angle from z-axis
+            let r = Math.cbrt(Math.random()) * radius; // Cube root for uniform density
+
+            let x = r * Math.sin(phi) * Math.cos(theta);
+            let y = r * Math.sin(phi) * Math.sin(theta);
+            let z = r * Math.cos(phi);
+
+            positions[i * 3] = x;
+            positions[i * 3 + 1] = y;
+            positions[i * 3 + 2] = z;
+
+            colors[i * 3] = 0.2 + Math.random() * 0.6;
+            colors[i * 3 + 1] = 0.1;
+            colors[i * 3 + 2] = 0.8 + Math.random() * 0.2;
+        }
+
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        // Load a circular texture for spherical particles
+        const textureLoader = new THREE.TextureLoader();
+        const particleTexture = textureLoader.load('https://threejs.org/examples/textures/sprites/circle.png');
+
+        const material = new THREE.PointsMaterial({
+            size: 0.05,
+            map: particleTexture, // Apply texture to make points circular
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.9,
+            depthWrite: false, // Prevents rendering issues
+            blending: THREE.AdditiveBlending,
+        });
+
+        this.particles = new THREE.Points(geometry, material);
+        this.particles.position.set(0, 0, 0);
+        this.particles.scale.set(5, 5, 5);
+        this.scene.add(this.particles);
+    }
+
+    animateGalaxy() {
+        if (this.particles) {
+            this.particles.rotation.y += 0.002;
+        }
+    }
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
     const loadingScreen = document.getElementById('loading-screen');
-    const loadingText = document.getElementById('loading-text');
 
-    const loadingManager = new THREE.LoadingManager();
-
-    loadingManager.onProgress = (url, loaded, total) => {
-        const progress = Math.round((loaded / total) * 100);
-        loadingText.textContent = `Loading... ${progress}%`;
-    };
-
-    loadingManager.onLoad = () => {
+    setTimeout(() => {
         loadingScreen.classList.add('fade-out');
         setTimeout(() => {
             loadingScreen.style.display = 'none';
             new SceneManager();
         }, 500);
-    };
-
-    loadingManager.onError = (url) => {
-        console.error('Error loading:', url);
-        loadingText.textContent = 'Error loading assets';
-    };
-
-    // Preload models
-    const loader = new GLTFLoader(loadingManager);
-    const models = [
-        '/assets/models/dogidle.glb',
-        '/assets/models/dogjump.glb'
-    ];
-
-    models.forEach(modelPath => {
-        loader.load(modelPath, () => {}, undefined, (error) => console.error(`Error loading model ${modelPath}:`, error));
-    });
+    }, 1000);
 });
 
-function unlockFormFields() {
-    const formElements = document.querySelectorAll('input, textarea');
-    const sendBtn = document.getElementById('send-btn');
+document.addEventListener("DOMContentLoaded", function () {
+    emailjs.init("8zyGzzVV8yWtsPwJx"); 
+});
 
-    formElements.forEach(input => {
-        if (input) {
-            input.disabled = false;
+const contactForm = document.getElementById("contact-form");
 
-            input.addEventListener('mouseover', () => {
-                Object.assign(input.style, {
-                    backgroundColor: '#F7E7CE',
-                    color: 'black',
-                    borderColor: 'black',
-                    transition: 'transform 0.3s',
-                    transform: 'scale(1.1)'
-                });
-            });
-
-            input.addEventListener('mouseout', () => {
-                Object.assign(input.style, {
-                    backgroundColor: '',
-                    color: '',
-                    borderColor: '',
-                    transform: 'scale(1)'
-                });
-            });
-        }
-    });
-
-    if (sendBtn) sendBtn.disabled = false;
-}
-
-// Setup form handling
-const contactForm = document.getElementById('contact-form');
 if (contactForm) {
-    contactForm.addEventListener('submit', function(event) {
+    contactForm.addEventListener("submit", function (event) {
         event.preventDefault();
 
-        const formData = {
-            name: document.getElementById('name')?.value || '',
-            email: document.getElementById('email')?.value || '',
-            message: document.getElementById('message')?.value || ''
+        // Use FormData for cleaner handling
+        const formData = new FormData(this);
+        const templateParams = {
+            name: formData.get("name"),
+            email: formData.get("email"),
+            message: formData.get("message"),
         };
 
-        emailjs.send('service_p9ddpnh', 'template_29u5xyj', formData)
+        emailjs
+            .send("service_p9ddpnh", "template_29u5xyj", templateParams)
             .then(
-                response => {
-                    console.log('SUCCESS!', response.status, response.text);
-                    alert('Your message has been sent successfully!');
-                    this.reset();
+                (response) => {
+                    console.log("SUCCESS!", response.status, response.text);
+                    alert("Your message has been sent successfully!");
+                    contactForm.reset(); // Reset form after successful submission
                 },
-                error => {
-                    console.error('FAILED...', error);
-                    alert('Failed to send the message. Please try again later.');
+                (error) => {
+                    console.error("FAILED...", error);
+                    alert("Failed to send the message. Please try again later.");
                 }
             );
     });
 }
-
-// Setup form unlock handler
-window.addEventListener('barFull', (event) => {
-    if (event.detail.isBarFull) {
-        unlockFormFields();
-    }
-});

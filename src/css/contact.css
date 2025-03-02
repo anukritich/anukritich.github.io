@@ -38,17 +38,55 @@ body {
   overflow: hidden; 
   background: black; 
   font-family: Arial, sans-serif;
+  cursor: none;
+}
+/* Galactic Cursor */
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #87cefa 10%, #00bfff 90%);
+  box-shadow: 0 0 8px rgba(135, 206, 250, 0.7),
+              0 0 15px rgba(0, 191, 255, 0.6);
+  position: fixed;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.cursor-outline {
+  width: 30px;
+  height: 30px;
+    border: 2px solid rgba(135, 206, 250, 0.5);
+    box-shadow: 0 0 10px rgba(135, 206, 250, 0.6),
+                0 0 20px rgba(0, 191, 255, 0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 999;
+  pointer-events: none;
 }
 h1 {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 26px;
+  font-weight: 1000;
+  text-shadow: 0 0 12px rgba(255, 20, 147, 0.7),
+               0 0 25px rgba(0, 191, 255, 0.6);
+}
+h1 span{
+  display: inline-block;
+  color: #00bfff;
+  text-shadow: 0 0 12px rgba(0, 191, 255, 0.7),
+               0 0 25px rgba(135, 206, 250, 0.6);
 }
 header {
   position: absolute;
   top: 5px;
   left: 20px;
 }
-
 
 /* Navbar */
 .navbar {
@@ -70,21 +108,25 @@ header {
   width: 24px;
   height: 24px;
   transition: transform 0.2s ease-in-out;
+  filter: invert(100%);
 }
 
 .navbar img:hover {
-    transform: scale(1.1);
+  transform: scale(1.2);
+  filter: drop-shadow(0 0 8px #ff00ff);
 }
-
 /* Content Section */
 .content {
   position: absolute;
-  top: 21%; 
-  left: 45%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   color: white;
   font-size: 20px;
   z-index: 1;
+  text-align: center;
 }
+
 .content h1{
   text-align: center;
 }
@@ -93,8 +135,10 @@ canvas {
   display: block; 
 }
 h1{
-  color: black;
+  color: white;
   padding: 2px;
+  text-shadow: 0 0 8px rgba(135, 206, 250, 0.7),
+              0 0 15px rgba(0, 191, 255, 0.6);
 }
 /* Contact Container */
 .contact-container {
@@ -138,10 +182,11 @@ label {
 /* Input and Textarea Style */
 input, textarea {
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(135, 206, 250, 0.7);
   border-radius: 8px;
-  background-color: #f9f9f9;
-  color: black;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.2);
+  background-color: black;
+  color: white;
   font-size: 14px;
   outline: none;
   resize: none;
@@ -155,7 +200,9 @@ textarea {
 
 input:focus, textarea:focus {
   border: 1px solid black;
-  box-shadow: 0 0 8px rgba(76, 175, 80, 0.2);
+ 
+  box-shadow: 0 0 8px rgba(135, 206, 250, 0.7),
+              0 0 15px rgba(0, 191, 255, 0.6);
 }
 
 
@@ -166,10 +213,10 @@ input:focus, textarea:focus {
   font-style: italic;
 }
 
-/* Button Style */
+/* Button Style */  
 button {
   padding: 12px;
-  background-color: black;
+  background-color: #87cefa;
   color: white;
   border: none;
   border-radius: 8px;
@@ -179,14 +226,18 @@ button {
   transition: background-color 0.3s ease, transform 0.2s ease;
   width: 100%;
   box-sizing: border-box;
+  margin-top: 30px;
 }
 
 button:hover {
-  background-color: chocolate;
+  background: linear-gradient(100deg, #fa3fb3, #1cc4fd);
   color: black;
   transform: scale(1.05);
+  box-shadow: 0 0 8px rgba(255, 20, 147, 0.7),
+               0 0 15px rgba(0, 191, 255, 0.6);
 }
   
+/* 🚀 Social Links */
 #links {
   display: flex;
   justify-content: center;
@@ -197,13 +248,27 @@ button:hover {
 #links a img {
   width: 30px;
   height: 30px;
+  filter: invert(100%);
 }
 
-/* Responsive Design */
+#links a img:hover {
+ 
+  transform: scale(1.2);
+  filter: drop-shadow(0 0 8px #ff00ff);
+}
+
+/* 📱 Responsive */
 @media (max-width: 768px) {
   .nav-icon {
       width: 20px;
       height: 20px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .row {
+    flex-direction: column;
+    gap: 10px;
   }
 }
 
@@ -213,12 +278,7 @@ button:hover {
       padding: 20px;
   }
 }
-@media screen and (max-width: 768px) {
-  .row {
-    flex-direction: column;
-    gap: 10px;
-  }
-}
+
 
 
 

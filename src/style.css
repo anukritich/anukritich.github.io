@@ -183,6 +183,7 @@ html::-webkit-scrollbar {
   text-shadow: 0 0 8px rgba(135, 206, 250, 0.9),
                0 0 15px rgba(0, 191, 255, 0.7);
   border-radius: 8px;
+  
 }
 
 
@@ -193,7 +194,11 @@ html::-webkit-scrollbar {
   height: 20px;
   /*filter: invert(80%);*/
 }
+.sidebar-nav .nav-link .nav-icon:hover {
+  filter: invert(100%) drop-shadow(0 0 8px #22dced);
 
+  
+}
 /* Tooltip Styling */
 .sidebar-nav .nav-item {
   position: relative;
