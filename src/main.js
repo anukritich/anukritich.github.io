@@ -161,7 +161,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 import * as THREE from 'three';
-import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 
 // Set up scene
 const canvas = document.getElementById('bg');
@@ -172,109 +171,274 @@ const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 
-const loader = new SVGLoader();
-const stars = [];
-const starCount = 200; // Dense starfield
+// Galaxy parameters
+const params = {
+    count: 50000,
+    size: 0.02,
+    radius: 5,
+    branches: 3,
+    spin: 1,
+    randomness: 0.2,
+    randomnessPower: 3,
+    insideColor: 0x9977ff,
+    outsideColor: 0x1b3984,
+    fogDensity: 0.05
+};
 
-loader.load('/assets/models/star.svg', (data) => {
-    const paths = data.paths;
+// Add fog to scene
+scene.fog = new THREE.FogExp2(0x000b24, params.fogDensity);
+scene.background = new THREE.Color(0x000000);
 
-    paths.forEach((path) => {
-        const shapes = SVGLoader.createShapes(path);
-
-        shapes.forEach((shape) => {
-            const extrudeSettings = { depth: 0.003, bevelEnabled: false };
-            const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-            const material = new THREE.MeshBasicMaterial({ 
-                color: 0xffffff, 
-                transparent: true, 
-                opacity: 1 
-            });
-
-            for (let i = 0; i < starCount; i++) {
-                const star = new THREE.Mesh(geometry, material);
-
-                // Random position in 3D space
-                const radius = Math.random() * 300 + 100; // Set revolution radius
-                const angle = Math.random() * Math.PI * 2; // Random start angle
-                star.userData.orbitRadius = radius;
-                star.userData.orbitAngle = angle;
-                star.userData.orbitSpeed = (Math.random() - 0.5) * 0.0005; // Small revolution speed
-
-                star.position.set(
-                    radius * Math.cos(angle),
-                    (Math.random() - 0.5) * 300, // Random Y height
-                    radius * Math.sin(angle)
-                );
-
-                // Random rotation
-                star.rotation.set(
-                    Math.random() * Math.PI,
-                    Math.random() * Math.PI,
-                    Math.random() * Math.PI
-                );
-
-                // Small star size
-                const scale = Math.random() * 0.007 + 0.005;
-                star.scale.set(scale, scale, scale);
-
-                // Store movement speed & direction
-                star.userData.blinkSpeed = Math.random() * 0.02 + 0.01;
-                star.userData.moveSpeed = {
-                    x: (Math.random() - 0.5) * 0.005,
-                    y: (Math.random() - 0.5) * 0.005,
-                    z: (Math.random() - 0.5) * 0.005
-                };
-
-                // Rotation speed
-                star.userData.rotationSpeed = {
-                    x: (Math.random() - 0.5) * 0.02,
-                    y: (Math.random() - 0.5) * 0.02,
-                    z: (Math.random() - 0.5) * 0.02
-                };
-
-                scene.add(star);
-                stars.push(star);
+// Planet effect on the bottom
+const createPlanet = () => {
+    const planet = new THREE.Mesh(
+        new THREE.SphereGeometry(20, 32, 32),
+        new THREE.MeshBasicMaterial({
+            color: 0x0077ff,
+            transparent: true,
+            opacity: 0.6
+        })
+    );
+    planet.position.set(0, -30, 0);
+    
+    // Add glow effect
+    const glowGeometry = new THREE.SphereGeometry(23, 32, 32);
+    const glowMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            glowColor: { value: new THREE.Color(0x00aaff) },
+            viewVector: { value: camera.position }
+        },
+        vertexShader: `
+            uniform vec3 viewVector;
+            varying float intensity;
+            void main() {
+                vec3 vNormal = normalize(normalMatrix * normal);
+                vec3 vNormel = normalize(normalMatrix * viewVector);
+                intensity = pow(0.6 - dot(vNormal, vNormel), 2.0);
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             }
-        });
+        `,
+        fragmentShader: `
+            uniform vec3 glowColor;
+            varying float intensity;
+            void main() {
+                vec3 glow = glowColor * intensity;
+                gl_FragColor = vec4(glow, 0.5);
+            }
+        `,
+        side: THREE.FrontSide,
+        blending: THREE.AdditiveBlending,
+        transparent: true
     });
+    
+    const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+    glowMesh.position.set(0, -30, 0);
+    scene.add(glowMesh);
+    scene.add(planet);
+};
 
-    animate(); // Start animation after loading stars
-});
+// Create galaxy
+const generateGalaxy = () => {
+    // Create geometry
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(params.count * 3);
+    const colors = new Float32Array(params.count * 3);
+    const scales = new Float32Array(params.count);
+    
+    const insideColor = new THREE.Color(params.insideColor);
+    const outsideColor = new THREE.Color(params.outsideColor);
+    
+    for (let i = 0; i < params.count; i++) {
+        const i3 = i * 3;
+        
+        // Position
+        const radius = Math.random() * params.radius;
+        const spinAngle = radius * params.spin;
+        const branchAngle = (i % params.branches) / params.branches * Math.PI * 2;
+        
+        const randomX = Math.pow(Math.random(), params.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) * params.randomness * radius;
+        const randomY = Math.pow(Math.random(), params.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) * params.randomness * radius;
+        const randomZ = Math.pow(Math.random(), params.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) * params.randomness * radius;
+        
+        positions[i3] = Math.cos(branchAngle + spinAngle) * radius + randomX;
+        positions[i3 + 1] = randomY; // Flat galaxy
+        positions[i3 + 2] = Math.sin(branchAngle + spinAngle) * radius + randomZ;
+        
+        // Color
+        const mixedColor = insideColor.clone();
+        mixedColor.lerp(outsideColor, radius / params.radius);
+        
+        colors[i3] = mixedColor.r;
+        colors[i3 + 1] = mixedColor.g;
+        colors[i3 + 2] = mixedColor.b;
+        
+        // Scale (for variability)
+        scales[i] = Math.random() * 2.5;
+    }
+    
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute('aScale', new THREE.BufferAttribute(scales, 1));
+    
+    // Material
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            uTime: { value: 0 },
+            uSize: { value: params.size * renderer.getPixelRatio() }
+        },
+        vertexShader: `
+            attribute vec3 color;
+            attribute float aScale;
+            varying vec3 vColor;
+            uniform float uTime;
+            uniform float uSize;
+            
+            void main() {
+                vColor = color;
+                
+                // Position
+                vec4 modelPosition = modelMatrix * vec4(position, 1.0);
+                
+                // Slow rotation
+                float angle = uTime * 0.05;
+                mat2 rotation = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+                modelPosition.xz = rotation * modelPosition.xz;
+                
+                vec4 viewPosition = viewMatrix * modelPosition;
+                vec4 projectedPosition = projectionMatrix * viewPosition;
+                
+                gl_Position = projectedPosition;
+                
+                // Size
+                gl_PointSize = uSize * aScale * (1.0 / -viewPosition.z);
+            }
+        `,
+        fragmentShader: `
+            varying vec3 vColor;
+            
+            void main() {
+                // Disc point pattern
+                float strength = distance(gl_PointCoord, vec2(0.5));
+                strength = 1.0 - strength;
+                strength = pow(strength, 5.0);
+                
+                // Final color
+                vec3 color = mix(vec3(0.0), vColor, strength);
+                gl_FragColor = vec4(color, strength * 0.8);
+            }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        vertexColors: true
+    });
+    
+    // Points
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+    
+    return { points, material };
+};
 
-camera.position.z = 200; // Adjusted for a full view
+// Create nebula clouds
+const createNebulaClouds = () => {
+    const clouds = [];
+    const cloudCount = 5;
+    
+    for (let i = 0; i < cloudCount; i++) {
+        const cloudGeometry = new THREE.PlaneGeometry(50, 50);
+        const cloudMaterial = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(
+                Math.random() * 0.2 + 0.5, 
+                Math.random() * 0.2, 
+                Math.random() * 0.5 + 0.5
+            ),
+            transparent: true,
+            opacity: Math.random() * 0.2 + 0.1,
+            side: THREE.DoubleSide,
+            blending: THREE.AdditiveBlending
+        });
+        
+        const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
+        
+        // Random position
+        const distance = Math.random() * 30 + 10;
+        const angle = Math.random() * Math.PI * 2;
+        
+        cloud.position.set(
+            Math.cos(angle) * distance,
+            (Math.random() - 0.5) * 30,
+            Math.sin(angle) * distance
+        );
+        
+        cloud.rotation.x = Math.random() * Math.PI;
+        cloud.rotation.y = Math.random() * Math.PI;
+        cloud.rotation.z = Math.random() * Math.PI;
+        
+        // Store animation data
+        cloud.userData = {
+            rotationSpeed: {
+                x: (Math.random() - 0.5) * 0.001,
+                y: (Math.random() - 0.5) * 0.001,
+                z: (Math.random() - 0.5) * 0.001
+            },
+            floatSpeed: {
+                x: (Math.random() - 0.5) * 0.01,
+                y: (Math.random() - 0.5) * 0.01,
+                z: (Math.random() - 0.5) * 0.01
+            }
+        };
+        
+        clouds.push(cloud);
+        scene.add(cloud);
+    }
+    
+    return clouds;
+};
 
-// Animation loop for blinking, moving, rotating & revolving
+const galaxy = generateGalaxy();
+const nebulaClouds = createNebulaClouds();
+createPlanet();
+
+camera.position.z = 75;
+camera.position.y = 30;
+camera.lookAt(0, 0, 0);
+
+// Add soft ambient light
+const ambientLight = new THREE.AmbientLight(0x7744ff, 0.5);
+scene.add(ambientLight);
+
+// Animation loop
 function animate() {
     requestAnimationFrame(animate);
-
-    const time = Date.now() * 0.005;
-    stars.forEach((star) => {
-        // Blinking effect
-        const blinkFactor = (Math.sin(time * star.userData.blinkSpeed) + 1) / 2 * 0.8 + 0.2;
-        star.material.opacity = blinkFactor;
-
-        // Smooth floating movement
-        star.position.x += star.userData.moveSpeed.x;
-        star.position.y += star.userData.moveSpeed.y;
-        star.position.z += star.userData.moveSpeed.z;
-
-        // Rotate stars
-        star.rotation.x += star.userData.rotationSpeed.x;
-        star.rotation.y += star.userData.rotationSpeed.y;
-        star.rotation.z += star.userData.rotationSpeed.z;
-
-        // Make stars revolve around the center
-        star.userData.orbitAngle += star.userData.orbitSpeed;
-        star.position.x = star.userData.orbitRadius * Math.cos(star.userData.orbitAngle);
-        star.position.z = star.userData.orbitRadius * Math.sin(star.userData.orbitAngle);
-
-        // Keep stars within bounds
-        if (Math.abs(star.position.y) > 300) star.position.y *= -1;
+    
+    const elapsedTime = Date.now() * 0.001;
+    
+    // Update galaxy uniforms
+    galaxy.material.uniforms.uTime.value = elapsedTime;
+    
+    // Animate nebula clouds
+    nebulaClouds.forEach(cloud => {
+        // Rotation
+        cloud.rotation.x += cloud.userData.rotationSpeed.x;
+        cloud.rotation.y += cloud.userData.rotationSpeed.y;
+        cloud.rotation.z += cloud.userData.rotationSpeed.z;
+        
+        // Floating movement
+        cloud.position.x += Math.sin(elapsedTime * 0.2) * cloud.userData.floatSpeed.x;
+        cloud.position.y += Math.cos(elapsedTime * 0.3) * cloud.userData.floatSpeed.y;
+        cloud.position.z += Math.sin(elapsedTime * 0.4) * cloud.userData.floatSpeed.z;
     });
-
+    
+    // Slight camera movement
+    camera.position.x = Math.sin(elapsedTime * 0.1) * 5;
+    camera.position.z = 75 + Math.cos(elapsedTime * 0.1) * 5;
+    camera.lookAt(0, 0, 0);
+    
     renderer.render(scene, camera);
 }
+
+animate();
 
 // Resize event handling
 window.addEventListener("resize", () => {
